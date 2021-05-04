@@ -1,11 +1,14 @@
 import java.io.*;
 import java.net.*;
 import java.util.HashMap;
+import java.util.ArrayList;
 
 public class Server{
 
     private DatagramSocket socket;
-    private HashMap<InetAddress, Com> comList;
+    private HashMap<InetAddress, Com> comList = new HashMap<InetAddress, Com>();
+    private int comPort = 15050;
+    private int portMax = 17000;
 
     public Server(int port) throws SocketException {
         socket = new DatagramSocket(port);
@@ -40,17 +43,22 @@ public class Server{
 
             //if the client is unknown from the server
             if (comList.get(clientAddress) == null){
-                com = new Com(clientAddress, clientPort);
+
+                comPort++;
+                com = new Com(clientAddress, clientPort, comPort);
                 com.start(1000);
                 comList.put(clientAddress, com);
 
                 String quote = "Welcome to the server !";
                 byte[] buffer = quote.getBytes();
 
-                DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+                DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, com.getComPort());
                 socket.send(response);
+
+                System.out.println("Adresse pas connue");
             } else {
                 com = comList.get(clientAddress);
+                System.out.println("Adresse connue");
             }
         }
     }

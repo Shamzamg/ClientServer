@@ -1,5 +1,7 @@
 import java.io.IOException;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 
 public class Client {
 
@@ -24,12 +26,15 @@ public class Client {
                 byte[] buffer = new byte[512];
                 DatagramPacket response = new DatagramPacket(buffer, buffer.length);
                 socket.receive(response);
-                System.out.println(response.getAddress() + " ; " + response.getPort());
 
-                String serverMessage = new String(buffer, 0, response.getLength());
+                String message = new String(buffer, 0, response.getLength());
 
-                System.out.println(serverMessage);
-                System.out.println();
+                //if we receive a new communication port
+                if(message.contains("com")){
+                    String [] s = message.split("/");
+                    System.out.println(message);
+                    port = Integer.parseInt(s[1]);
+                }
 
                 Thread.sleep(1000);
             }

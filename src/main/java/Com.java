@@ -10,17 +10,19 @@ public class Com implements Runnable{
     private DatagramSocket socket;
     InetAddress clientAddress;
     int clientPort;
+    int comPort;
     Server server;
 
     private long pause;
     private boolean isRunning = false;
     private Thread thread;
 
-    public Com(InetAddress address, int portClient){
+    public Com(InetAddress address, int portClient, int cPort){
         try{
             clientAddress = address;
             clientPort = portClient;
-            socket = new DatagramSocket();
+            comPort = cPort;
+            socket = new DatagramSocket(comPort);
         } catch(IOException ex){
             System.out.println("Client error: " + ex.getMessage() + " address:" + clientAddress);
             ex.printStackTrace();
@@ -32,6 +34,20 @@ public class Com implements Runnable{
         thread = new Thread(this);
         thread.start();
         isRunning = true;
+
+        //once we start, we tell the Client our address
+        String message = "com/" + comPort;
+        byte[] buff = message.getBytes();
+
+        DatagramPacket startMessage = new DatagramPacket(buff, buff.length, clientAddress, clientPort);
+
+        try{
+            socket.send(startMessage);
+        } catch(IOException ex){
+            System.out.println("Client error: " + ex.getMessage() + " address:" + clientAddress);
+            ex.printStackTrace();
+        }
+
     }
 
     public void run(){
@@ -51,7 +67,7 @@ public class Com implements Runnable{
                     String byeMessage = "Good bye !";
                     byte[] buff = byeMessage.getBytes();
 
-                    DatagramPacket byeResponse = new DatagramPacket(buff, buff.length, clientAddress, clientPort);
+                    DatagramPacket byeResponse = new DatagramPacket(buff, buff.length, clientAddress, comPort);
                     socket.send(byeResponse);
 
                     //we then stop the connection
@@ -60,7 +76,7 @@ public class Com implements Runnable{
                     String okMessage = "OK !";
                     byte[] buff = okMessage.getBytes();
 
-                    DatagramPacket okResponse = new DatagramPacket(buff, buff.length, clientAddress, clientPort);
+                    DatagramPacket okResponse = new DatagramPacket(buff, buff.length, clientAddress, comPort);
                     socket.send(okResponse);
                 }
 
@@ -71,6 +87,10 @@ public class Com implements Runnable{
                 ex.printStackTrace();
             }
         }
+    }
+
+    public int getComPort(){
+        return comPort;
     }
 
 }
