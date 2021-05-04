@@ -16,18 +16,19 @@ public class Client {
             InetAddress address = InetAddress.getByName(hostname);
             DatagramSocket socket = new DatagramSocket();
 
-            while (true) {
+            DatagramPacket request = new DatagramPacket(new byte[1], 1, address, port);
+            socket.send(request);
 
-                DatagramPacket request = new DatagramPacket(new byte[1], 1, address, port);
-                socket.send(request);
+            while (true) {
 
                 byte[] buffer = new byte[512];
                 DatagramPacket response = new DatagramPacket(buffer, buffer.length);
                 socket.receive(response);
+                System.out.println(response.getAddress() + " ; " + response.getPort());
 
-                String quote = new String(buffer, 0, response.getLength());
+                String serverMessage = new String(buffer, 0, response.getLength());
 
-                System.out.println(quote);
+                System.out.println(serverMessage);
                 System.out.println();
 
                 Thread.sleep(1000);
