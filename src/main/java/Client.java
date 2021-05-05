@@ -1,9 +1,16 @@
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class Client {
+
+    private static InetAddress address;
+    private static DatagramSocket socket;
+    private static int port;
+    private static String hostname;
 
     public static void main(String[] args) {
         if (args.length < 2) {
@@ -11,41 +18,71 @@ public class Client {
             return;
         }
 
-        String hostname = args[0];
-        int port = Integer.parseInt(args[1]);
+        //get main arguments
+        hostname = args[0];
+        port = Integer.parseInt(args[1]);
 
         try {
-            InetAddress address = InetAddress.getByName(hostname);
-            DatagramSocket socket = new DatagramSocket();
+            //initialize the connexion with the server
+            address = InetAddress.getByName(hostname);
+            //initial port
+            socket = new DatagramSocket();
 
             DatagramPacket request = new DatagramPacket(new byte[1], 1, address, port);
             socket.send(request);
 
-            while (true) {
+            Thread send = new Thread(() -> {
+                while(true){
+                    try{
+                        byte[] sendBuffer;
 
-                byte[] buffer = new byte[512];
-                DatagramPacket response = new DatagramPacket(buffer, buffer.length);
-                socket.receive(response);
+                        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+                        String outMessage = in.readLine();
 
-                String message = new String(buffer, 0, response.getLength());
+                        String outString = "Received: " + outMessage;
+                        sendBuffer = outString.getBytes();
 
-                //if we receive a new communication port
-                if(message.contains("com")){
-                    String [] s = message.split("/");
-                    System.out.println(message);
-                    port = Integer.parseInt(s[1]);
+                        DatagramPacket out = new DatagramPacket(sendBuffer, sendBuffer.length, address, port);
+                        socket.send(out);
+
+                        if (outMessage.equals("end"))
+                            break;
+                    } catch(IOException e){
+                        e.printStackTrace();
+                    }
                 }
+            });
+            send.start();
 
-                Thread.sleep(1000);
-            }
+            Thread receive = new Thread(() -> {
+                try {
+                    while(true){
+                        byte[] responseBuffer = new byte[512];
+
+                        DatagramPacket response = new DatagramPacket(responseBuffer, responseBuffer.length);
+                        socket.receive(response);
+
+                        String message = new String(responseBuffer, 0, response.getLength());
+
+                        //if we receive a new communication port
+                        if(message.contains("^^!-°)°6§è+=4-°%communication")){
+                            String [] s = message.split("/");
+                            port = Integer.parseInt(s[1]);
+                        }
+                        System.out.println(message);
+
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+            receive.start();
 
         } catch (SocketTimeoutException ex) {
             System.out.println("Timeout error: " + ex.getMessage());
             ex.printStackTrace();
         } catch (IOException ex) {
             System.out.println("Client error: " + ex.getMessage());
-            ex.printStackTrace();
-        } catch (InterruptedException ex) {
             ex.printStackTrace();
         }
     }

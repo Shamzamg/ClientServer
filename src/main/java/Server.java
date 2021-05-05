@@ -6,9 +6,10 @@ import java.util.ArrayList;
 public class Server{
 
     private DatagramSocket socket;
-    private HashMap<InetAddress, Com> comList = new HashMap<InetAddress, Com>();
-    private int comPort = 15050;
-    private int portMax = 17000;
+    int maxCom = 2;
+    ArrayList<Integer> comList = new ArrayList<>();
+    private int comPortMin = 15000;
+    private int comPort = 15000;
 
     public Server(int port) throws SocketException {
         socket = new DatagramSocket(port);
@@ -32,39 +33,58 @@ public class Server{
         }
     }
 
+    private void addCom(InetAddress clientAddress, int clientPort){
+        try{
+            Com com;
+
+            com = new Com(clientAddress, clientPort, comPort, this, 1000);
+            comList.add(comPort);
+
+            String quote = "Welcome to the server !";
+            byte[] buffer = quote.getBytes();
+
+            DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, com.getComPort());
+            socket.send(response);
+
+            comPort++;
+            System.out.println("Port inutilisé");
+        } catch(IOException e){
+            System.out.println("I/O error: " + e.getMessage());
+        }
+    }
+
     private void start() throws IOException {
         while (true) {
-            Com com;
             DatagramPacket request = new DatagramPacket(new byte[1], 1);
             socket.receive(request);
 
             InetAddress clientAddress = request.getAddress();
             int clientPort = request.getPort();
 
-            //if the client is unknown from the server
-            if (comList.get(clientAddress) == null){
-
-                comPort++;
-                com = new Com(clientAddress, clientPort, comPort);
-                com.start(1000);
-                comList.put(clientAddress, com);
-
-                String quote = "Welcome to the server !";
-                byte[] buffer = quote.getBytes();
-
-                DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, com.getComPort());
-                socket.send(response);
-
-                System.out.println("Adresse pas connue");
-            } else {
-                com = comList.get(clientAddress);
-                System.out.println("Adresse connue");
+            //if the client is unknown from the server and the number of client is not reached yet
+            if (!(comList.contains(comPort)) && (comList.size() < maxCom)){
+                addCom(clientAddress, clientPort);
+            }
+            //sinon, on cherche un port disponsible
+            else {
+                boolean found = false;
+                for(int i=comPortMin;i<comPortMin + maxCom;i++){
+                    if (!(comList.contains(comPort)) && (comList.size() < maxCom)){
+                        addCom(clientAddress, clientPort);
+                        found = true;
+                        break;
+                    }
+                }
+                if(!found){
+                    System.out.println("Le nombre maximum de clients est atteint ! réessayez plus tard ");
+                }
             }
         }
     }
 
-    public void delete(InetAddress add) {
-        comList.remove(add);
+    public void delete(int port) {
+        System.out.println("deleting" + port);
+        comList.remove(port);
     }
 
 }
