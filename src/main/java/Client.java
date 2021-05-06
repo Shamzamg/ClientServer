@@ -68,8 +68,10 @@ public class Client {
                         if(message.contains("^^!-°)°6§è+=4-°%communication")){
                             String [] s = message.split("/");
                             port = Integer.parseInt(s[1]);
+                            System.out.println("Connected on port: " + port);
+                        }else{
+                            System.out.println(message);
                         }
-                        System.out.println(message);
 
                     }
                 } catch (IOException e) {

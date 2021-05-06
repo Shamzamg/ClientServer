@@ -33,12 +33,13 @@ public class Server{
         }
     }
 
-    private void addCom(InetAddress clientAddress, int clientPort){
+    private void addCom(InetAddress clientAddress, int clientPort, int port){
         try{
             Com com;
 
-            com = new Com(clientAddress, clientPort, comPort, this, 1000);
-            comList.add(comPort);
+            com = new Com(clientAddress, clientPort, port);
+            comList.add(port);
+            com.start(1000, this);
 
             String quote = "Welcome to the server !";
             byte[] buffer = quote.getBytes();
@@ -46,8 +47,7 @@ public class Server{
             DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, com.getComPort());
             socket.send(response);
 
-            comPort++;
-            System.out.println("Port inutilisé");
+            System.out.println("Nouveau port utilisé: " + port);
         } catch(IOException e){
             System.out.println("I/O error: " + e.getMessage());
         }
@@ -61,30 +61,30 @@ public class Server{
             InetAddress clientAddress = request.getAddress();
             int clientPort = request.getPort();
 
-            //if the client is unknown from the server and the number of client is not reached yet
-            if (!(comList.contains(comPort)) && (comList.size() < maxCom)){
-                addCom(clientAddress, clientPort);
+            //On cherche un port disponsible
+            boolean found = false;
+            for(int i=comPortMin;i<comPortMin + maxCom;i++){
+                if (!(comList.contains(i)) && (comList.size() < maxCom)){
+                    addCom(clientAddress, clientPort, i);
+                    found = true;
+                    break;
+                }
             }
-            //sinon, on cherche un port disponsible
-            else {
-                boolean found = false;
-                for(int i=comPortMin;i<comPortMin + maxCom;i++){
-                    if (!(comList.contains(comPort)) && (comList.size() < maxCom)){
-                        addCom(clientAddress, clientPort);
-                        found = true;
-                        break;
-                    }
-                }
-                if(!found){
-                    System.out.println("Le nombre maximum de clients est atteint ! réessayez plus tard ");
-                }
+            //si on n'en trouve pas
+            if(!found){
+                String quote = "Le nombre maximum de clients est atteint ! réessayez plus tard ";
+                byte[] buffer = quote.getBytes();
+
+                DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
+                socket.send(response);
+                System.out.println("Tentative de connexion échouée: Le serveur a atteint son nombre maximal de connexions.");
             }
         }
     }
 
     public void delete(int port) {
-        System.out.println("deleting" + port);
-        comList.remove(port);
+        System.out.println("Port libéré: " + port);
+        comList.remove(Integer.valueOf(port));
     }
 
 }
