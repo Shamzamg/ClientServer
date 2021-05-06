@@ -1,6 +1,6 @@
 # ClientServer
 
-This projects is a Client/Server implemented in Java. Server creates a new communication thread and allocates a new port for each Client.
+This project is a Client/Server implemented in Java. Server creates a new communication thread and allocates a new port for each Client.
 
 ## Setup
 
