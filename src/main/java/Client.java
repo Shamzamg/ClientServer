@@ -28,7 +28,11 @@ public class Client {
             //initial port
             socket = new DatagramSocket();
 
-            DatagramPacket request = new DatagramPacket(new byte[1], 1, address, port);
+
+            String heyMessage = "hello serveur RX302";
+            byte[] heyBuff = heyMessage.getBytes();
+
+            DatagramPacket request = new DatagramPacket(heyBuff, heyBuff.length, address, port);
             socket.send(request);
 
             Thread send = new Thread(() -> {
@@ -70,7 +74,7 @@ public class Client {
                             port = Integer.parseInt(s[1]);
                             System.out.println("Connected on port: " + port);
                         }else{
-                            System.out.println(message);
+                            System.out.println(message + " @ip: " +response.getAddress() + " port: " + response.getPort());
                         }
 
                     }

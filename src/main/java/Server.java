@@ -41,13 +41,13 @@ public class Server{
             comList.add(port);
             com.start(1000, this);
 
-            String quote = "Welcome to the server !";
+            String quote = "Serveur RX302 ready!";
             byte[] buffer = quote.getBytes();
 
             DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, com.getComPort());
             socket.send(response);
 
-            System.out.println("Nouveau port utilisé: " + port);
+            System.out.println("Nouveau client : @" + clientAddress + " port:" + port);
         } catch(IOException e){
             System.out.println("I/O error: " + e.getMessage());
         }
