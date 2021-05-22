@@ -68,7 +68,6 @@ public class Com{
                         socket.send(byeResponse);
 
                         //we then stop the connection
-                        System.out.println(server);
                         socket.close();
 
                         server.delete(comPort);
